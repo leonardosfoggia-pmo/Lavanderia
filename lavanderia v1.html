@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Lavanderia do Leo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: ferramenta em duas faixas — assistente de ciclo (escolhas → visor da máquina) e painel de manutenção; referência dos programas no fim */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#15212b; --muted:#5b6b78; --line:#d9e0e6;
+  --accent:#0e6f86; --accent-soft:#e1f0f4; --panel:#16232d; --panel-ink:#e9f3f6; --lcd:#7fe3f5;
+  --ok:#1f7a4d; --ok-soft:#e3f3ea; --warn:#a1620b; --warn-soft:#fbf0dc; --bad:#b3362c; --bad-soft:#f9e3e0;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161c; --surface:#17212a; --ink:#e6edf2; --muted:#93a3b0; --line:#2a3743;
+  --accent:#5cc3d9; --accent-soft:#163541; --panel:#0a1116; --panel-ink:#e6f3f7; --lcd:#7fe3f5;
+  --ok:#5fcf93; --ok-soft:#163327; --warn:#e8b25a; --warn-soft:#3a2c14; --bad:#f08a80; --bad-soft:#3d1d1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161c; --surface:#17212a; --ink:#e6edf2; --muted:#93a3b0; --line:#2a3743;
+  --accent:#5cc3d9; --accent-soft:#163541; --panel:#0a1116; --panel-ink:#e6f3f7; --lcd:#7fe3f5;
+  --ok:#5fcf93; --ok-soft:#163327; --warn:#e8b25a; --warn-soft:#3a2c14; --bad:#f08a80; --bad-soft:#3d1d1a; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.6vw,40px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:24px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:end;justify-content:space-between}
+header.top .meta{display:grid;gap:6px}
+header.top .model{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.btn-link{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.btn-link:hover{border-color:var(--accent);color:var(--accent)}
+
+section{display:grid;gap:18px}
+.sec-head{display:grid;gap:4px}
+.sec-head p{color:var(--muted);max-width:65ch}
+
+/* Assistente */
+.assist{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.assist{grid-template-columns:1fr}}
+.form{display:grid;gap:22px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:10px;min-width:0}
+legend{font-weight:700;font-size:14px;padding:0;margin-bottom:10px}
+legend small{font-weight:500;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip label{display:inline-flex;flex-direction:column;gap:1px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--bg);font-weight:600;font-size:14px;line-height:1.25;user-select:none}
+.chip label span{font-weight:500;font-size:12px;color:var(--muted)}
+.chip input:checked + label{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.chip input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Visor */
+.result{display:grid;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:820px){.result{position:static}}
+.machine{background:var(--panel);color:var(--panel-ink);border-radius:14px;padding:20px;display:grid;gap:16px}
+.machine .row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.machine .prog{font-family:var(--f-display);font-size:28px;font-weight:700;line-height:1.1}
+.machine .why{color:#a9bcc6;font-size:14px;max-width:46ch}
+.lcd{font-family:var(--f-mono);font-weight:700;font-size:44px;color:var(--lcd);letter-spacing:.04em;line-height:1;text-shadow:0 0 14px rgba(127,227,245,.35);font-variant-numeric:tabular-nums;text-align:right}
+.lcd small{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#8aa3ae;text-shadow:none;margin-top:6px}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:#2a3a46;border-radius:10px;overflow:hidden}
+.settings div{background:#1d2c37;padding:10px 12px;display:grid;gap:2px}
+.settings dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8aa3ae;margin:0}
+.settings dd{margin:0;font-family:var(--f-mono);font-size:14px;font-weight:700;color:var(--panel-ink)}
+.machine ol{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px;color:#cfdde3}
+.loads{display:grid;gap:10px}
+.load{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:4px}
+.load .lt{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700}
+.load .lt span{font-family:var(--f-mono);color:var(--accent)}
+.load p{color:var(--muted);font-size:14px}
+.notes{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.notes li{padding:10px 12px;border-radius:8px;font-size:14px;border-left:3px solid}
+.notes li.warn{background:var(--warn-soft);border-color:var(--warn)}
+.notes li.info{background:var(--accent-soft);border-color:var(--accent)}
+.notes li.bad{background:var(--bad-soft);border-color:var(--bad)}
+.alt{font-size:14px;color:var(--muted)}
+.alt b{color:var(--ink)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:28px;color:var(--muted);text-align:center}
+
+/* Manutenção */
+.maint{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.task{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.task .th{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.task .next{font-family:var(--f-mono);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.task .next small{font-family:var(--f-body);font-size:12px;font-weight:500;color:var(--muted);display:block}
+.task p.how{font-size:14px}
+.task p.basis{font-size:12px;color:var(--muted)}
+.task .ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:end;border-top:1px solid var(--line);padding-top:10px}
+.task label{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:600}
+.task input{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+.task input[type=number]{width:72px}
+button{font:inherit;font-weight:700;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);cursor:pointer}
+button.ghost{background:transparent;color:var(--accent)}
+button:hover{filter:brightness(1.08)}
+.counter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+.counter b{font-family:var(--f-mono);font-size:18px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.habits{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.habits ul{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;font-size:14px}
+
+/* Tabela */
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td.desc{white-space:normal;color:var(--muted);min-width:220px}
+tr:last-child td{border-bottom:0}
+.dash{color:var(--muted)}
+footer{color:var(--muted);font-size:13px;display:grid;gap:4px}
+@media (prefers-reduced-motion:no-preference){.machine{transition:opacity .2s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="meta">
+      <span class="eyebrow">Lava e seca · 127V · 11 kg lavar / 7 kg secar</span>
+      <h1>Lavanderia do Leo</h1>
+      <span class="model">Midea MFA01D110B · manual rev. 04 (fev/2026)</span>
+    </div>
+    <div class="links">
+      <a class="btn-link" href="https://conteudo.midea.com.br/manuais/lava-e-seca-ciclo-pets.pdf" target="_blank" rel="noopener">Manual em PDF ↗</a>
+      <a class="btn-link" href="https://www.midea.com/br/contato/" target="_blank" rel="noopener">SAC Midea ↗</a>
+    </div>
+  </header>
+
+  <section aria-labelledby="h-assist">
+    <div class="sec-head">
+      <h2 id="h-assist">Qual ciclo eu uso?</h2>
+      <p>Marque o que vai lavar e quanto tempo você tem. A recomendação segue o manual e mostra uma alternativa mais rápida quando o ciclo ideal não cabe no seu tempo.</p>
+    </div>
+    <div class="assist">
+      <form class="form" id="f" autocomplete="off">
+        <fieldset>
+          <legend>O que vai lavar? <small>(pode marcar mais de um)</small></legend>
+          <div class="chips" id="cats"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Quanto de roupa?</legend>
+          <div class="chips" id="loads"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Nível de sujeira</legend>
+          <div class="chips" id="dirts"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Secar na máquina?</legend>
+          <div class="chips" id="drys"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Quanto tempo você tem?</legend>
+          <div class="chips" id="times"></div>
+        </fieldset>
+      </form>
+      <div class="result" id="out" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-maint">
+    <div class="sec-head">
+      <h2 id="h-maint">Limpeza e manutenção</h2>
+      <p>Os cuidados vêm do manual; os intervalos são sugestões e você pode ajustar. Ao fazer uma tarefa, toque em “Feito hoje”. As datas ficam salvas neste navegador.</p>
+    </div>
+    <div class="maint" id="maint"></div>
+    <div class="habits">
+      <h3>A cada lavagem</h3>
+      <ul>
+        <li>Use no máximo 40 g de sabão (pó ou líquido); excesso gera espuma e vazamento.</li>
+        <li>Tire a roupa logo ao terminar, para evitar bolor e manchas.</li>
+        <li>Deixe a porta entreaberta alguns minutos e feche a torneira.</li>
+        <li>Esvazie os bolsos e feche zíperes; sutiã com aro vai em saquinho de lavagem.</li>
+        <li>Separe brancas, coloridas e pretas.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-ref">
+    <div class="sec-head">
+      <h2 id="h-ref">Os 16 programas</h2>
+      <p>Tabelas 9.1 e 9.2 do manual. Temperaturas no 127V: água fria, 20, 30, 40, 50 ou 60 °C. Centrifugação: 0 a 1200 rpm.</p>
+    </div>
+    <div class="tbl"><table id="ref"></table></div>
+  </section>
+
+  <footer>
+    <span>SAC Midea: 3003 1005 (capitais) · 0800 648 1005 (demais localidades)</span>
+    <span>Pesos e tempos de secagem marcados como “estimativa” são aproximações; a máquina ajusta a secagem automática conforme a carga.</span>
+  </footer>
+</div>
+
+<script>
+const P = {
+  algodao:  {n:"Algodão",        w:11,  d:7,  t:"60 °C",     m:166, r:"800",  vapor:true, sec:true, desc:"Algodão, cama e mesa, íntimas, camisetas e camisas"},
+  mix:      {n:"Mix",            w:11,  d:7,  t:"40 °C",     m:97,  r:"1000", vapor:true, sec:true, desc:"Algodão misturado com sintético"},
+  bebe:     {n:"Roupa bebê",     w:11,  d:7,  t:"60 °C",     m:181, r:"1000", vapor:true, sec:true, desc:"Pele sensível"},
+  rapido15: {n:"Rápido 15'",     w:2,   d:1,  t:"Água fria", m:15,  r:"800",  sec:true, desc:"Até 2 kg, peças leves e pouco sujas"},
+  rapido60: {n:"Rápido 60'",     w:2,   d:1,  t:"Água fria", m:59,  r:"1200", sec:true, desc:"Até 2 kg, peças leves e pouco sujas"},
+  secar:    {n:"Secar",          w:0,   d:7,  t:"—",         m:273, r:"1200", sec:true, desc:"Só secagem; automático ou 30–180 min"},
+  lavsec:   {n:"Lavar + secar",  w:7,   d:7,  t:"40 °C",     m:335, r:"—",    sec:true, desc:"Ciclo completo padrão"},
+  sintetico:{n:"Sintético",      w:5.5, d:3.5,t:"40 °C",     m:120, r:"1000", sec:true, desc:"Blusas, casacos, dry fit, itens mistos"},
+  pets:     {n:"Ciclo Pets",     w:5.5, d:0,  t:"40 °C",     m:164, r:"1200", desc:"Remove pelos de animais"},
+  diaadia:  {n:"Dia a dia",      w:5.5, d:0,  t:"20 °C",     m:68,  r:"1000", desc:"Poucas roupas, pouco sujas"},
+  eco:      {n:"Super ECO",      w:5.5, d:0,  t:"30 °C",     m:59,  r:"1000", desc:"Economia de energia, mesma performance"},
+  jeans:    {n:"Pesado/Jeans",   w:11,  d:0,  t:"40 °C",     m:89,  r:"1000", desc:"Jeans, menor rotação"},
+  delicado: {n:"Delicado/Lã",    w:2,   d:0,  t:"Água fria", m:59,  r:"600",  desc:"Lingerie, seda, lã"},
+  cama:     {n:"Cama/Banho",     w:11,  d:0,  t:"40 °C",     m:130, r:"1000", desc:"Edredons, mantas, cobertas"},
+  centrif:  {n:"Centrifugar",    w:11,  d:0,  t:"—",         m:12,  r:"1000", desc:"Só centrifugação"},
+  limpeza:  {n:"Limpeza do cesto",w:0,  d:0,  t:"60 °C",     m:90,  r:"—",    desc:"Sem roupas; a cada ~100 lavagens"}
+};
+
+const CATS = [
+  {id:"dia",     n:"Roupa do dia a dia", s:"camisetas, cuecas, meias"},
+  {id:"lencois", n:"Roupa de cama",      s:"lençóis, fronhas"},
+  {id:"toalhas", n:"Toalhas",            s:"banho, rosto"},
+  {id:"edredom", n:"Edredom ou manta",   s:"peças volumosas"},
+  {id:"jeans",   n:"Jeans",              s:"calças, jaquetas"},
+  {id:"sint",    n:"Sintéticas",         s:"dry fit, academia, casacos"},
+  {id:"misto",   n:"Algodão + sintético",s:"camisas, blusas mistas"},
+  {id:"delic",   n:"Delicadas",          s:"lingerie, seda, lã"},
+  {id:"bebe",    n:"Roupa de bebê",      s:""},
+  {id:"pet",     n:"Com pelo de pet",    s:"mantinhas, roupas"}
+];
+const LOADS = [
+  {id:"p", n:"Pouca",  s:"até 2 kg · ex.: 2 lençóis", kg:2},
+  {id:"m", n:"Média",  s:"até 5,5 kg · meio cesto",   kg:5.5},
+  {id:"g", n:"Cheia",  s:"até 11 kg · cesto cheio",   kg:11}
+];
+const DIRTS = [{id:"leve",n:"Leve",s:"usou pouco"},{id:"normal",n:"Normal",s:""},{id:"pesada",n:"Pesada",s:"manchas, suor, barro"}];
+const DRYS  = [{id:"sim",n:"Sim",s:""},{id:"nao",n:"Não, varal",s:""}];
+const TIMES = [{id:30,n:"30 min"},{id:60,n:"1 h"},{id:120,n:"2 h"},{id:180,n:"3 h"},{id:9999,n:"Sem pressa",s:"ou vou sair"}];
+
+// Opções por tipo de roupa, em ordem de preferência pelo manual
+function optionsFor(cat, dirt){
+  const heavy = dirt === "pesada";
+  switch(cat){
+    case "lencois": return heavy ? ["algodao","mix"] : ["algodao","mix","eco"];
+    case "toalhas": return ["algodao","mix","cama"];
+    case "edredom": return ["cama"];
+    case "jeans":   return heavy ? ["jeans"] : ["jeans","rapido60","rapido15"];
+    case "sint":
+      if (heavy)           return ["sintetico"];
+      if (dirt === "leve") return ["diaadia","rapido60","sintetico","rapido15"];
+      return ["sintetico","diaadia","rapido60","rapido15"];
+    case "misto":   return heavy ? ["mix"] : (dirt === "leve" ? ["diaadia","mix","eco"] : ["mix","diaadia","eco"]);
+    case "delic":   return ["delicado"];
+    case "bebe":    return ["bebe","algodao"];
+    case "pet":     return ["pets"];
+    case "dia":
+      // Dia a dia é o programa do manual para esse caso (até 5,5 kg); Algodão fica para sujeira pesada ou cesto cheio
+      if (dirt === "leve")  return ["diaadia","rapido60","rapido15","eco","mix"];
+      if (heavy)            return ["algodao","mix"];
+      return ["diaadia","mix","eco","algodao"];
+  }
+  return ["mix"];
+}
+const NO_DRY = {edredom:"Edredons, mantas e colchas não devem ser secos na máquina (manual, seção 4). Seque no varal.",
+                delic:"Lã, seda e peças delicadas não devem ir à secagem. Seque à sombra, na horizontal."};
+const WHY = {
+  algodao:"O manual indica Algodão para roupa de cama e mesa e peças de algodão.",
+  mix:"Programa para algodão e sintético juntos; mais curto que o Algodão.",
+  eco:"Água a 30 °C, mesma performance de lavagem com menos energia.",
+  cama:"Feito para peças grandes e volumosas, com pouca ou média sujeira.",
+  jeans:"Tempo, temperatura e rotação pensados para preservar o jeans.",
+  rapido60:"Para até 2 kg de peças leves e pouco sujas.",
+  rapido15:"O mais rápido: até 2 kg de peças leves e pouco sujas.",
+  sintetico:"Lavagem mais suave e curta, protege as fibras sintéticas.",
+  diaadia:"Para poucas roupas que não estão muito sujas.",
+  delicado:"Enxágue mais cuidadoso e centrifugação baixa (600 rpm).",
+  bebe:"Reforça o enxágue para proteger a pele sensível do bebê.",
+  pets:"Remove pelos de animais e inibe germes."
+};
+
+// Estimativa de secagem (min) — Custom inclui 10 min de centrifugação
+function dryEst(kg){
+  if (kg <= 2)   return {m:70,  how:"SECAR → CUSTOM 60 min (o visor mostra 70)"};
+  if (kg <= 5.5) return {m:130, how:"SECAR → CUSTOM 120 min (o visor mostra 130) ou AUTO"};
+  return {m:273, how:"SECAR → AUTO (a máquina calcula; conte com cerca de 4h30)"};
+}
+const fmt = m => Math.floor(m/60) + ":" + String(m%60).padStart(2,"0");
+const fmtLong = m => m >= 60 ? (Math.floor(m/60) + " h" + (m%60 ? " " + (m%60) + " min" : "")) : m + " min";
+
+function plan(cat, load, dirt, wantDry, time){
+  const kg = load.kg;
+  const opts = optionsFor(cat, dirt).filter(k => P[k].w >= kg);
+  const canDry = wantDry && !NO_DRY[cat];
+  const dryKg = Math.min(kg, 7);
+  const build = k => {
+    const p = P[k]; let total = p.m; let dry = null;
+    if (canDry){
+      const est = dryEst(dryKg);
+      if (p.sec && p.d >= dryKg){ dry = {mode:"inline", how:"Aperte a tecla SECAR antes de iniciar: " + est.how.replace("SECAR → ","")}; total += est.m; }
+      else { dry = {mode:"separate", how:"Depois, rode o programa Secar: " + est.how.replace("SECAR → ","")}; total += est.m; }
+    }
+    return {k, p, total, dry};
+  };
+  if (!opts.length) return null;
+  const all = opts.map(build);
+  const ideal = all[0];
+  const fit = all.find(o => o.total <= time);
+  return {ideal, pick: fit || ideal, fits: !!fit, canDry, all};
+}
+
+const state = {cats:new Set(), load:"p", dirt:"normal", dry:"sim", time:180};
+
+function chips(el, list, name, multi){
+  el.innerHTML = list.map(o => {
+    const id = name + "-" + o.id;
+    return `<div class="chip"><input type="${multi?"checkbox":"radio"}" name="${name}" id="${id}" value="${o.id}"><label for="${id}">${o.n}${o.s?`<span>${o.s}</span>`:""}</label></div>`;
+  }).join("");
+}
+chips(document.getElementById("cats"), CATS, "cat", true);
+chips(document.getElementById("loads"), LOADS, "load");
+chips(document.getElementById("dirts"), DIRTS, "dirt");
+chips(document.getElementById("drys"), DRYS, "dry");
+chips(document.getElementById("times"), TIMES, "time");
+
+function syncForm(){
+  document.querySelectorAll('input[name=cat]').forEach(i => i.checked = state.cats.has(i.value));
+  document.querySelector(`input[name=load][value="${state.load}"]`).checked = true;
+  document.querySelector(`input[name=dirt][value="${state.dirt}"]`).checked = true;
+  document.querySelector(`input[name=dry][value="${state.dry}"]`).checked = true;
+  document.querySelector(`input[name=time][value="${state.time}"]`).checked = true;
+}
+document.getElementById("f").addEventListener("change", e => {
+  const t = e.target;
+  if (t.name === "cat"){ t.checked ? state.cats.add(t.value) : state.cats.delete(t.value); }
+  else if (t.name === "time") state.time = Number(t.value);
+  else state[t.name] = t.value;
+  render();
+});
+
+function machineCard(r, cat, load, notes){
+  const o = r.pick, p = o.p;
+  const steps = [];
+  steps.push(`Gire o seletor até <b>${p.n}</b>.`);
+  if (o.k === "algodao" && load.kg <= 5.5 && state.dirt !== "pesada" && cat === "lencois") steps.push("Se preferir economizar energia, baixe a temperatura para 40 °C na tecla TEMP.");
+  if (p.vapor && (state.dirt === "pesada" || cat === "toalhas" || cat === "lencois")) steps.push("Opcional: aperte VAPOR para higienizar melhor.");
+  if (o.dry && o.dry.mode === "inline") steps.push(o.dry.how + ".");
+  steps.push("Sabão no compartimento II (máx. 40 g); amaciante no compartimento do meio.");
+  steps.push("Aperte INICIAR/pausar.");
+  if (o.dry && o.dry.mode === "separate") steps.push(o.dry.how + ".");
+  const cName = CATS.find(c => c.id === cat).n;
+  return `<div class="machine">
+    <div class="row">
+      <div style="display:grid;gap:6px;min-width:0">
+        <span class="eyebrow" style="color:#8aa3ae">${cName} · ${load.n.toLowerCase()}</span>
+        <div class="prog">${p.n}</div>
+        <p class="why">${WHY[o.k] || p.desc}</p>
+      </div>
+      <div class="lcd">${fmt(o.total)}<small>${o.dry ? "lavar + secar (estimativa)" : "tempo padrão"}</small></div>
+    </div>
+    <dl class="settings">
+      <div><dt>Temperatura</dt><dd>${p.t}</dd></div>
+      <div><dt>Centrifugação</dt><dd>${p.r} rpm</dd></div>
+      <div><dt>Lavagem</dt><dd>${fmt(p.m)}</dd></div>
+      <div><dt>Secagem</dt><dd>${o.dry ? (o.dry.mode === "inline" ? "tecla SECAR" : "programa Secar") : "varal"}</dd></div>
+    </dl>
+    <ol>${steps.map(s => `<li>${s}</li>`).join("")}</ol>
+  </div>`;
+}
+
+function render(){
+  syncForm();
+  const out = document.getElementById("out");
+  const cats = [...state.cats];
+  const load = LOADS.find(l => l.id === state.load);
+  const wantDry = state.dry === "sim";
+  if (!cats.length){ out.innerHTML = `<div class="empty">Marque o tipo de roupa ao lado. Aqui aparece o programa indicado, com temperatura, centrifugação, tempo total e os botões para apertar, além das outras opções adequadas e quanto cada uma leva.</div>`; return; }
+
+  const notes = [];
+  const results = cats.map(c => ({c, r: plan(c, load, state.dirt, wantDry, state.time)}));
+  results.filter(x => !x.r).forEach(x => notes.push({cls:"bad", t:`${CATS.find(c=>c.id===x.c).n}: nenhum programa aceita ${load.s.split(" · ")[0]} desse tipo. Divida em cargas menores.`}));
+  const valid = results.filter(x => x.r);
+  if (wantDry){ cats.forEach(c => { if (NO_DRY[c]) notes.push({cls:"warn", t:NO_DRY[c]}); }); }
+  if (wantDry && load.kg > 7) notes.push({cls:"warn", t:"A secagem aceita no máximo 7 kg. Com o cesto cheio, retire parte das roupas antes de secar."});
+  if (state.dirt === "pesada") notes.push({cls:"info", t:"Sujeira pesada: os programas rápidos ficaram de fora. Manchas localizadas saem melhor se esfregadas à mão antes."});
+
+  let html = "";
+  if (!valid.length){ out.innerHTML = `<ul class="notes">${notes.map(n=>`<li class="${n.cls}">${n.t}</li>`).join("")}</ul>`; return; }
+
+  const programs = [...new Set(valid.map(x => x.r.pick.k))];
+  const mustSeparate = cats.filter(c => ["delic","edredom","pet","bebe"].includes(c));
+
+  if (programs.length === 1){
+    const x = valid[0];
+    html += machineCard(x.r, x.c, load, notes);
+    if (!x.r.fits) notes.unshift({cls:"warn", t:`Nenhum programa adequado cabe em ${fmtLong(state.time)}. O ideal leva ${fmtLong(x.r.ideal.total)}. Dica: use ADIAR FIM para a roupa terminar quando você voltar.`});
+    else if (x.r.pick.k !== x.r.ideal.k) html += `<p class="alt">Com mais tempo, o ideal pelo manual é <b>${x.r.ideal.p.n}</b> (${fmtLong(x.r.ideal.total)}${x.r.ideal.dry ? " com secagem" : ""}).</p>`;
+    const others = x.r.all.filter(o => o.k !== x.r.pick.k);
+    if (others.length) html += `<div class="loads"><p style="font-weight:700">Outras opções adequadas</p>` + others.map(o => `<div class="load"><div class="lt">${o.p.n}<span>${fmt(o.total)}</span></div><p>${WHY[o.k] || o.p.desc}${o.total > state.time ? " · passa do seu tempo" : ""}</p></div>`).join("") + `</div>`;
+    if (state.time === 9999) html += `<p class="alt">Vai sair? Aperte <b>ADIAR FIM</b> (1 a 24 h) para a roupa terminar perto da hora em que você chega.</p>`;
+  } else {
+    html += `<div class="loads"><p style="font-weight:700">Melhor separar em ${valid.length} cargas:</p>` +
+      valid.map(x => {
+        const o = x.r.pick;
+        return `<div class="load"><div class="lt">${CATS.find(c=>c.id===x.c).n} → ${o.p.n}<span>${fmt(o.total)}</span></div><p>${o.p.t} · ${o.p.r} rpm${o.dry ? " · " + (o.dry.mode==="inline"?"tecla SECAR":"depois, programa Secar") : " · varal"}${x.r.fits ? "" : " · não cabe no seu tempo"}</p></div>`;
+      }).join("") + `</div>`;
+    if (!mustSeparate.length){
+      const together = plan("misto", load, state.dirt === "pesada" ? "normal" : state.dirt, wantDry, state.time);
+      if (together) html += `<p class="alt">Quer lavar tudo junto? Use <b>Mix</b> (40 °C, ${fmtLong(together.ideal.total)}${together.ideal.dry ? " com secagem" : ""}), desde que as cores combinem.</p>`;
+    } else {
+      notes.push({cls:"info", t:"Delicadas, edredons, roupa de bebê e peças com pelo de pet devem ir em carga separada."});
+    }
+  }
+  notes.push({cls:"info", t:"Separe por cor. Peça nova que pode soltar tinta: molhe e torça um canto antes para testar."});
+  html += `<ul class="notes">${notes.map(n=>`<li class="${n.cls}">${n.t}</li>`).join("")}</ul>`;
+  out.innerHTML = html;
+}
+
+// Tabela de referência
+(function(){
+  const order = ["algodao","mix","bebe","rapido15","rapido60","secar","lavsec","sintetico","pets","diaadia","eco","jeans","delicado","cama","centrif","limpeza"];
+  const rows = order.map(k => { const p = P[k];
+    return `<tr><td><b>${p.n}</b></td><td class="num">${p.w ? String(p.w).replace(".",",") + " kg" : '<span class="dash">—</span>'}</td><td class="num">${p.d ? String(p.d).replace(".",",") + " kg" : '<span class="dash">não</span>'}</td><td class="num">${p.t}</td><td class="num">${k==="secar"?"auto*":fmt(p.m)}</td><td class="num">${p.r}</td><td>${p.vapor?"vapor":'<span class="dash">—</span>'}</td><td class="desc">${p.desc}</td></tr>`; }).join("");
+  document.getElementById("ref").innerHTML = `<thead><tr><th>Programa</th><th>Lavar</th><th>Secar</th><th>Temp.</th><th>Tempo</th><th>rpm</th><th>Extra</th><th>Indicação</th></tr></thead><tbody>${rows}</tbody>`;
+})();
+
+// Manutenção
+const TASKS = [
+  {id:"cesto", n:"Limpeza do cesto", iv:60, how:"Máquina vazia, programa Limpeza do cesto, com até 30 ml de água sanitária no dispenser. Leva cerca de 1h30 a 60 °C.", basis:"Manual: a cada ~100 lavagens, e com mais frequência se usar muito a secagem (solta mais fiapos).", count:true},
+  {id:"vedacao", n:"Borracha da porta", iv:30, how:"Passe um pano macio em toda a vedação e desobstrua os canais de escoamento. É ali que ficam os fiapos.", basis:"Manual: verificar e limpar periodicamente; vedação suja causa mau cheiro."},
+  {id:"bomba", n:"Filtro da bomba de drenagem", iv:30, how:"Tire da tomada. Abra a tampinha frontal inferior, escoe a água num pote pela mangueirinha, gire o filtro para fora e lave.", basis:"Manual: verificar regularmente; retém moedas, botões e objetos. Entupido, gera erro E21."},
+  {id:"dispenser", n:"Gaveta de sabão", iv:30, how:"Puxe a gaveta, solte a tampa do amaciante e lave com água corrente e escovinha. Limpe também o encaixe da gaveta.", basis:"Manual: limpeza periódica para evitar entupimento por sabão ou amaciante."},
+  {id:"agua", n:"Filtros de entrada de água", iv:90, how:"Feche a torneira, solte a mangueira na torneira e na máquina e lave os dois filtros em água corrente.", basis:"Manual: verificar com frequência; entupidos, causam erro E10."}
+];
+const BASE = "2026-10-17";
+const DEFAULTS = {cesto:{last:"2026-10-17", iv:60, n:0}};
+const KEY = "lavanderia-leo-v1";
+let store = {};
+try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e){ store = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} };
+const get = t => Object.assign({last:BASE, iv:t.iv, n:0}, DEFAULTS[t.id] || {}, store[t.id] || {});
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d; };
+const brDate = d => d.toLocaleDateString("pt-BR", {day:"2-digit", month:"short", year:"numeric"});
+
+function renderMaint(){
+  const el = document.getElementById("maint");
+  const now = new Date(today() + "T12:00:00");
+  el.innerHTML = TASKS.map(t => {
+    const s = get(t);
+    const due = addDays(s.last, s.iv);
+    const left = Math.round((due - now) / 86400000);
+    let pill;
+    if (left < 0) pill = `<span class="pill bad">Atrasada ${-left} d</span>`;
+    else if (left <= 7) pill = `<span class="pill warn">${left === 0 ? "Vence hoje" : "Em " + left + " d"}</span>`;
+    else pill = `<span class="pill ok">Em dia</span>`;
+    let counter = "";
+    if (t.count){
+      const pct = Math.min(100, s.n);
+      counter = `<div style="display:grid;gap:6px"><div class="counter"><span>Lavagens desde a última limpeza: <b>${s.n}</b> / 100</span><button type="button" class="ghost" data-inc="${t.id}">+1 lavagem</button></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+    }
+    return `<article class="task">
+      <div class="th"><h3>${t.n}</h3>${pill}</div>
+      <div class="next">${brDate(due)}<small>próxima · última em ${brDate(new Date(s.last + "T12:00:00"))}${!store[t.id] && !DEFAULTS[t.id] ? " (instalação)" : ""}</small></div>
+      <p class="how">${t.how}</p>
+      ${counter}
+      <p class="basis">${t.basis}</p>
+      <div class="ctrl">
+        <button type="button" data-done="${t.id}">Feito hoje</button>
+        <label for="last-${t.id}">Última vez<input type="date" id="last-${t.id}" data-last="${t.id}" value="${s.last}"></label>
+        <label for="iv-${t.id}">A cada (dias)<input type="number" min="1" max="365" id="iv-${t.id}" data-iv="${t.id}" value="${s.iv}"></label>
+      </div>
+    </article>`;
+  }).join("");
+}
+document.getElementById("maint").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.done){ const id = b.dataset.done; store[id] = Object.assign(get(TASKS.find(t=>t.id===id)), store[id]||{}, {last: today()}); if (id === "cesto") store[id].n = 0; }
+  if (b.dataset.inc){ const id = b.dataset.inc; const s = get(TASKS.find(t=>t.id===id)); store[id] = Object.assign({}, s, {n: s.n + 1}); }
+  save(); renderMaint();
+});
+document.getElementById("maint").addEventListener("change", e => {
+  const i = e.target;
+  if (i.dataset.last && i.value){ const id = i.dataset.last; store[id] = Object.assign(get(TASKS.find(t=>t.id===id)), {last: i.value}); }
+  if (i.dataset.iv){ const id = i.dataset.iv; const v = Math.max(1, Math.min(365, parseInt(i.value,10) || 30)); store[id] = Object.assign(get(TASKS.find(t=>t.id===id)), {iv: v}); }
+  save(); renderMaint();
+});
+
+render();
+renderMaint();
+</script>
+
+</body>
+</html>
