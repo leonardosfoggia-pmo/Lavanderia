@@ -348,7 +348,7 @@ const LOADS = [
   {id:"g",n:"Cheia",s:"até 11 kg · cesto cheio",kg:11}
 ];
 const DIRTS = [{id:"leve",n:"Leve",s:"usou pouco"},{id:"normal",n:"Normal",s:""},{id:"pesada",n:"Pesada",s:"manchas, suor, barro"}];
-const DRYS = [{id:"sim",n:"Sim",s:""},{id:"nao",n:"Não, varal",s:""}];
+const DRYS = [{id:"nao",n:"Não, varal",s:""},{id:"sim",n:"Sim",s:""}];
 const DLOADS = [
   {id:"p",n:"Pouca",s:"até 2 kg · ex.: 2 lençóis",kg:2},
   {id:"m",n:"Média",s:"até 5 kg",kg:5},
@@ -413,7 +413,7 @@ function plan(cat, load, dirt, wantDry, time){
 }
 
 /* ---------- Estado e formulário ---------- */
-const state = {mode:"roupa", cats:new Set(), load:"p", dirt:"normal", dry:"sim", time:180, prog:null, dcats:new Set(), dload:"m", dstate:"molhada", dgoal:"guardar"};
+const state = {mode:"roupa", cats:new Set(), load:"p", dirt:"normal", dry:"nao", time:180, prog:null, dcats:new Set(), dload:"m", dstate:"molhada", dgoal:"guardar"};
 
 function chips(el, list, name, multi){
   el.innerHTML = list.map(o => {
