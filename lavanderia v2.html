@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lavanderia do Leo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: cabeçalho enxuto + 3 abas. Na aba de ciclo, escolhas num cartão claro à esquerda e resultado num painel azul-petróleo à direita (o "visor" da máquina). */
+:root{
+  --bg:#f4f6f8; --surface:#ffffff; --ink:#16212a; --muted:#5d6c78; --line:#dde3e8; --soft:#eef2f5;
+  --accent:#0e6f86; --accent-soft:#e2f1f5;
+  --res:#0c4a59; --res-ink:#eef8fa; --res-muted:#a7c9d2; --res-line:rgba(255,255,255,.14); --res-cell:rgba(255,255,255,.07); --lcd:#8ff0ff;
+  --ok:#1f7a4d; --ok-soft:#e3f3ea; --warn:#9a5d08; --warn-soft:#fbf0dc; --bad:#b3362c; --bad-soft:#f9e3e0;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e151b; --surface:#161f27; --ink:#e6edf2; --muted:#93a3b0; --line:#26323d; --soft:#1c2731;
+  --accent:#5cc3d9; --accent-soft:#163541;
+  --res:#0f3e4a; --res-ink:#eef8fa; --res-muted:#a7c9d2; --res-line:rgba(255,255,255,.12); --res-cell:rgba(255,255,255,.06); --lcd:#8ff0ff;
+  --ok:#5fcf93; --ok-soft:#163327; --warn:#e8b25a; --warn-soft:#3a2c14; --bad:#f08a80; --bad-soft:#3d1d1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e151b; --surface:#161f27; --ink:#e6edf2; --muted:#93a3b0; --line:#26323d; --soft:#1c2731;
+  --accent:#5cc3d9; --accent-soft:#163541;
+  --res:#0f3e4a; --res-ink:#eef8fa; --res-muted:#a7c9d2; --res-line:rgba(255,255,255,.12); --res-cell:rgba(255,255,255,.06); --lcd:#8ff0ff;
+  --ok:#5fcf93; --ok-soft:#163327; --warn:#e8b25a; --warn-soft:#3a2c14; --bad:#f08a80; --bad-soft:#3d1d1a; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(26px,4.2vw,34px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer}
+
+header.top{display:grid;gap:4px}
+header.top .model{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+
+/* Abas */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 14px;font-weight:700;font-size:15px;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--ink)}
+.panel{display:grid;gap:20px}
+
+/* Aba ciclo */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:840px){.split{grid-template-columns:1fr}}
+.box-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.config{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:22px}
+.config .box-label{color:var(--muted)}
+.mode{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:10px;padding:4px;gap:4px}
+.mode button{border:0;background:transparent;border-radius:7px;padding:9px 10px;font-weight:700;font-size:14px;color:var(--muted);line-height:1.25}
+.mode button span{display:block;font-weight:500;font-size:12px}
+.mode button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:10px;min-width:0}
+legend{font-weight:700;font-size:14px;padding:0;margin-bottom:10px}
+legend small{font-weight:500;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip label{display:inline-flex;flex-direction:column;gap:1px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--surface);font-weight:600;font-size:14px;line-height:1.25;user-select:none}
+.chip label span{font-weight:500;font-size:12px;color:var(--muted)}
+.chip label:hover{border-color:var(--accent)}
+.chip input:checked + label{border-color:var(--accent);background:var(--accent-soft)}
+.chip input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+.progs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.progs .chip label{width:100%;height:100%}
+.progs .chip label span{font-family:var(--f-mono)}
+
+.result{background:var(--res);color:var(--res-ink);border-radius:14px;padding:20px;display:grid;gap:16px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:840px){.result{position:static}}
+.result .box-label{color:var(--res-muted)}
+.r-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.r-name{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1.1}
+.r-why{color:var(--res-muted);font-size:14px;max-width:46ch;margin-top:6px}
+.lcd{font-family:var(--f-mono);font-weight:700;font-size:42px;color:var(--lcd);letter-spacing:.03em;line-height:1;text-shadow:0 0 14px rgba(143,240,255,.3);font-variant-numeric:tabular-nums;text-align:right}
+.lcd small{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--res-muted);text-shadow:none;margin-top:6px}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin:0}
+.settings div{background:var(--res-cell);border-radius:8px;padding:9px 11px;display:grid;gap:2px}
+.settings dt{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--res-muted)}
+.settings dd{margin:0;font-family:var(--f-mono);font-size:14px;font-weight:700}
+.r-sec{display:grid;gap:8px;border-top:1px solid var(--res-line);padding-top:14px}
+.r-sec h3{font-size:14px;font-family:var(--f-body)}
+.r-sec ol,.r-sec ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px}
+.r-alt{display:grid;gap:6px}
+.r-alt div{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.r-alt div span:last-child{font-family:var(--f-mono);color:var(--lcd);white-space:nowrap}
+.r-alt div small{color:var(--res-muted)}
+.r-notes{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.r-notes li{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--res-cell);border-left:3px solid var(--res-muted)}
+.r-notes li.warn{border-left-color:#f2c26b}
+.r-notes li.bad{border-left-color:#ff9b8f}
+.tags{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0}
+.tags li{font-size:13px;padding:4px 9px;border-radius:999px;background:var(--res-cell)}
+.tags.no li{text-decoration:none;color:#ffd2cc}
+.r-empty{color:var(--res-muted);font-size:15px;padding:24px 4px;text-align:center}
+.r-load{display:flex;justify-content:space-between;gap:10px;background:var(--res-cell);border-radius:8px;padding:10px 12px;font-size:14px;flex-wrap:wrap}
+.r-load b{font-family:var(--f-display);font-size:16px}
+.r-load span{font-family:var(--f-mono);color:var(--lcd)}
+
+/* Manutenção */
+.maint{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.card .th{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.next{font-family:var(--f-mono);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.next small{font-family:var(--f-body);font-size:12px;font-weight:500;color:var(--muted);display:block}
+.card p{font-size:14px}
+.card p.basis{font-size:12px;color:var(--muted)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:end;border-top:1px solid var(--line);padding-top:10px}
+.ctrl label{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:600}
+input,textarea{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-width:0}
+input[type=number]{width:72px}
+.btn{font-weight:700;font-size:14px;padding:8px 13px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.danger{border-color:var(--bad);background:var(--bad);color:var(--surface)}
+.btn:hover{filter:brightness(1.08)}
+.counter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+.counter b{font-family:var(--f-mono);font-size:18px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.plain{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:8px}
+.plain ul{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px}
+.lead{color:var(--muted);max-width:65ch}
+
+/* Suporte */
+.support{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.contact{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.contact .num{font-family:var(--f-mono);font-size:18px;font-weight:700}
+.contact small{display:block;color:var(--muted);font-size:12px}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.code{font-family:var(--f-mono);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.notes-form{display:grid;gap:10px}
+.notes-form .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.notes-form label{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:600}
+.notes-form textarea{min-height:90px;resize:vertical;width:100%}
+.note-list{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.note{background:var(--soft);border-radius:10px;padding:12px 14px;display:grid;gap:6px}
+.note .nh{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.note time{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.note p{white-space:pre-wrap;font-size:14px}
+.note .acts{display:flex;gap:6px;align-items:center}
+.note .acts button{font-size:13px;padding:4px 9px}
+.empty-note{color:var(--muted);font-size:14px}
+footer{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Lavanderia do Leo</h1>
+    <span class="model">Midea MFA01D110B · 127V · 11 kg lavar / 7 kg secar</span>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Seções">
+    <button class="tab" role="tab" id="t-ciclo" aria-controls="p-ciclo" data-tab="ciclo">Escolha o melhor ciclo</button>
+    <button class="tab" role="tab" id="t-manutencao" aria-controls="p-manutencao" data-tab="manutencao">Manutenção</button>
+    <button class="tab" role="tab" id="t-suporte" aria-controls="p-suporte" data-tab="suporte">Suporte</button>
+  </nav>
+
+  <!-- ABA 1 -->
+  <section class="panel" id="p-ciclo" role="tabpanel" aria-labelledby="t-ciclo">
+    <div class="split">
+      <form class="config" id="f" autocomplete="off">
+        <span class="box-label">Suas escolhas</span>
+        <div class="mode" role="group" aria-label="Como escolher">
+          <button type="button" id="m-roupa" data-mode="roupa">Pelas roupas<span>o que vou lavar</span></button>
+          <button type="button" id="m-prog" data-mode="programa">Pelo programa<span>para que serve cada um</span></button>
+        </div>
+        <div id="by-roupa" style="display:grid;gap:22px">
+          <fieldset><legend>O que vai lavar? <small>(pode marcar mais de um)</small></legend><div class="chips" id="cats"></div></fieldset>
+          <fieldset><legend>Quanto de roupa?</legend><div class="chips" id="loads"></div></fieldset>
+          <fieldset><legend>Nível de sujeira</legend><div class="chips" id="dirts"></div></fieldset>
+          <fieldset><legend>Secar na máquina?</legend><div class="chips" id="drys"></div></fieldset>
+          <fieldset><legend>Quanto tempo você tem?</legend><div class="chips" id="times"></div></fieldset>
+        </div>
+        <div id="by-prog" hidden>
+          <fieldset><legend>Programas do seletor</legend><div class="progs" id="progs"></div></fieldset>
+        </div>
+      </form>
+      <div class="result" id="out" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ABA 2 -->
+  <section class="panel" id="p-manutencao" role="tabpanel" aria-labelledby="t-manutencao" hidden>
+    <p class="lead">Cuidados tirados do manual. Os intervalos são sugestões e você pode ajustar. Toque em “Feito hoje” ao concluir uma tarefa.</p>
+    <div class="maint" id="maint"></div>
+    <div class="plain">
+      <h3>A cada lavagem</h3>
+      <ul>
+        <li>No máximo 40 g de sabão; excesso gera espuma e vazamento.</li>
+        <li>Tire a roupa logo ao terminar, para evitar bolor e manchas.</li>
+        <li>Deixe a porta entreaberta alguns minutos e feche a torneira.</li>
+        <li>Esvazie bolsos, feche zíperes; sutiã com aro vai em saquinho.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ABA 3 -->
+  <section class="panel" id="p-suporte" role="tabpanel" aria-labelledby="t-suporte" hidden>
+    <div class="support">
+      <div class="card">
+        <h3>Manual do usuário</h3>
+        <p>Versão oficial em PDF, revisão 04 (fev/2026), válida para os modelos MFA01D105B e MFA01D110B.</p>
+        <div><a class="btn" style="display:inline-block;text-decoration:none" href="https://conteudo.midea.com.br/manuais/lava-e-seca-ciclo-pets.pdf" target="_blank" rel="noopener">Abrir manual ↗</a></div>
+      </div>
+      <div class="card">
+        <h3>SAC Midea</h3>
+        <div class="contact"><div><span class="num" id="sac1">3003 1005</span><small>capitais e regiões metropolitanas</small></div><button class="btn ghost" type="button" data-copy="sac1">Copiar</button></div>
+        <div class="contact"><div><span class="num" id="sac2">0800 648 1005</span><small>demais localidades</small></div><button class="btn ghost" type="button" data-copy="sac2">Copiar</button></div>
+        <p><a href="https://www.midea.com/br/contato/" target="_blank" rel="noopener">Atendimento on-line ↗</a></p>
+      </div>
+      <div class="card">
+        <h3>Garantia</h3>
+        <p>24 meses a partir da nota fiscal (3 de garantia legal + 21 da Midea). Guarde a nota fiscal junto com o manual.</p>
+        <p class="basis">Manutenção só com assistência autorizada, para não perder a garantia.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:10px">
+      <h2>Códigos de erro no visor</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Código</th><th>O que é</th><th>O que fazer</th></tr></thead>
+        <tbody>
+          <tr><td class="code">E10</td><td>Falta ou pouca água na entrada</td><td>Abra a torneira, desdobre a mangueira, limpe os filtros de entrada de água.</td></tr>
+          <tr><td class="code">E12</td><td>Transbordamento</td><td>Reinicie a máquina. Se repetir, chame o SAC.</td></tr>
+          <tr><td class="code">E21</td><td>Problema para drenar</td><td>Desdobre a mangueira de saída e limpe o filtro da bomba de drenagem.</td></tr>
+          <tr><td class="code">E30</td><td>Porta mal fechada</td><td>Verifique se nenhuma roupa prende na porta e feche de novo.</td></tr>
+          <tr><td class="code">E52</td><td>Excesso de roupa ou cesto travado</td><td>Tire da tomada, retire roupas, gire o cesto à mão uma volta completa e reinicie.</td></tr>
+          <tr><td class="code">HU</td><td>Tensão da rede maior que a da máquina</td><td>Confira se a tomada é 127V. A máquina não é bivolt.</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>Bloco de notas</h2>
+      <p class="basis">Registre o que acontecer com a máquina: erros, ruídos, visitas técnicas, dicas que funcionaram.</p>
+      <form class="notes-form" id="nf">
+        <label for="n-text">Nota<textarea id="n-text" placeholder="Ex.: apareceu E21 depois de lavar tapete; limpei o filtro da bomba e voltou ao normal."></textarea></label>
+        <div class="row">
+          <label for="n-date">Data<input type="date" id="n-date"></label>
+          <button class="btn" type="submit">Salvar nota</button>
+        </div>
+      </form>
+      <ul class="note-list" id="notes"></ul>
+    </div>
+  </section>
+
+  <footer>Tempos de secagem marcados como estimativa são aproximações; a máquina ajusta a secagem automática conforme a carga. Datas e notas ficam salvas neste navegador.</footer>
+</div>
+
+<script>
+/* ---------- Dados do manual ---------- */
+const P = {
+  algodao:  {n:"Algodão",        w:11,  d:7,  t:"60 °C",     m:166, r:"800",  vapor:true, sec:true},
+  mix:      {n:"Mix",            w:11,  d:7,  t:"40 °C",     m:97,  r:"1000", vapor:true, sec:true},
+  bebe:     {n:"Roupa bebê",     w:11,  d:7,  t:"60 °C",     m:181, r:"1000", vapor:true, sec:true},
+  rapido15: {n:"Rápido 15'",     w:2,   d:1,  t:"Água fria", m:15,  r:"800",  sec:true},
+  rapido60: {n:"Rápido 60'",     w:2,   d:1,  t:"Água fria", m:59,  r:"1200", sec:true},
+  secar:    {n:"Secar",          w:0,   d:7,  t:"—",         m:273, r:"1200", sec:true},
+  lavsec:   {n:"Lavar + secar",  w:7,   d:7,  t:"40 °C",     m:335, r:"—",    sec:true},
+  sintetico:{n:"Sintético",      w:5.5, d:3.5,t:"40 °C",     m:120, r:"1000", sec:true},
+  pets:     {n:"Ciclo Pets",     w:5.5, d:0,  t:"40 °C",     m:164, r:"1200"},
+  diaadia:  {n:"Dia a dia",      w:5.5, d:0,  t:"20 °C",     m:68,  r:"1000"},
+  eco:      {n:"Super ECO",      w:5.5, d:0,  t:"30 °C",     m:59,  r:"1000"},
+  jeans:    {n:"Pesado/Jeans",   w:11,  d:0,  t:"40 °C",     m:89,  r:"1000"},
+  delicado: {n:"Delicado/Lã",    w:2,   d:0,  t:"Água fria", m:59,  r:"600"},
+  cama:     {n:"Cama/Banho",     w:11,  d:0,  t:"40 °C",     m:130, r:"1000"},
+  centrif:  {n:"Centrifugar",    w:11,  d:0,  t:"—",         m:12,  r:"1000"},
+  limpeza:  {n:"Limpeza do cesto",w:0,  d:0,  t:"60 °C",     m:90,  r:"—"}
+};
+const WHY = {
+  algodao:"O manual indica Algodão para roupa de cama e mesa e peças de algodão.",
+  mix:"Para algodão e sintético juntos; mais curto que o Algodão.",
+  eco:"Água a 30 °C, mesma performance de lavagem com menos energia.",
+  cama:"Feito para peças grandes e volumosas, com pouca ou média sujeira.",
+  jeans:"Tempo, temperatura e rotação pensados para preservar o jeans.",
+  rapido60:"Para até 2 kg de peças leves e pouco sujas.",
+  rapido15:"O mais rápido: até 2 kg de peças leves e pouco sujas.",
+  sintetico:"Lavagem mais suave e curta, protege as fibras sintéticas.",
+  diaadia:"Para poucas roupas que não estão muito sujas.",
+  delicado:"Enxágue mais cuidadoso e centrifugação baixa (600 rpm).",
+  bebe:"Reforça a lavagem para proteger a pele sensível do bebê.",
+  pets:"Remove pelos de animais e inibe germes."
+};
+/* Caminho reverso: posições do seletor, com uso e restrições do manual */
+const SELECTOR = [
+  {k:"algodao", good:["Algodão","Lençóis e fronhas","Toalhas de mesa","Camisetas e camisas","Peças íntimas"], bad:["Sintéticos delicados","Lã e seda"], note:"Padrão 60 °C. Para roupa colorida ou do dia a dia, baixe para 40 °C na tecla TEMP."},
+  {k:"mix", good:["Algodão + sintético","Camisas e blusas mistas","Carga variada do dia a dia"], bad:["Lã e seda","Edredons"]},
+  {k:"bebe", good:["Roupa de bebê, lavada separada"], bad:["Roupa de adulto misturada"]},
+  {k:"rapido60", name:"Rápido 15'/60'", time:"15 min ou 59 min", good:["Até 2 kg","Ex.: 1 jeans leve + 1 blusa sintética + 1 camiseta"], bad:["Toalhas grandes","Jeans pesados","Sujeira pesada"], note:"Secagem neste programa aceita só 1 kg."},
+  {k:"secar", good:["Roupas já lavadas, até 7 kg"], bad:["Lã e seda","Edredons, colchas, sacos de dormir","Espuma de borracha","Peças que soltam muito fiapo","Nylon e impermeáveis"], note:"Display mostra AU (automático). Tempos fixos: 30, 60, 90, 120 ou 180 min; cada um soma 10 min de centrifugação."},
+  {k:"lavsec", good:["Ciclo completo lavar e secar, até 7 kg"], bad:["Cargas acima de 7 kg","Peças que não podem ir à secadora"]},
+  {k:"sintetico", good:["Blusas e casacos sintéticos","Dry fit e roupa de academia","Itens mistos"], bad:["Mais de 5,5 kg","Secagem acima de 3,5 kg"]},
+  {k:"pets", good:["Roupas e mantas com pelo de cão ou gato"], bad:["Mais de 5,5 kg"], note:"Não tem secagem. Se quiser secar, rode o programa Secar depois."},
+  {k:"diaadia", good:["Poucas roupas","Pouca sujeira","Camisetas, cuecas, meias"], bad:["Sujeira pesada","Mais de 5,5 kg"]},
+  {k:"eco", good:["Cargas comuns com economia de energia","Até 5,5 kg"], bad:["Sujeira pesada"]},
+  {k:"jeans", good:["Calças e jaquetas jeans"], bad:["Peças delicadas"]},
+  {k:"delicado", good:["Lingerie","Seda e lã","Peças que danificam fácil"], bad:["Mais de 2 kg","Secar na máquina"], note:"Seque à sombra, na horizontal."},
+  {k:"cama", good:["Edredons","Mantas e cobertas","Peças volumosas"], bad:["Sujeira pesada","Secar na máquina"], note:"Edredons e colchas não devem ir à secagem; seque no varal."},
+  {k:"centrif", good:["Tirar o excesso de água de roupas molhadas"], bad:[]},
+  {k:"limpeza", good:["Limpar cesto e mangueiras, máquina vazia"], bad:["Qualquer roupa"], note:"Coloque até 30 ml de água sanitária no dispenser. Recomendado a cada ~100 lavagens."}
+];
+
+const CATS = [
+  {id:"dia",n:"Roupa do dia a dia",s:"camisetas, cuecas, meias"},
+  {id:"lencois",n:"Roupa de cama",s:"lençóis, fronhas"},
+  {id:"toalhas",n:"Toalhas",s:"banho, rosto"},
+  {id:"edredom",n:"Edredom ou manta",s:"peças volumosas"},
+  {id:"jeans",n:"Jeans",s:"calças, jaquetas"},
+  {id:"sint",n:"Sintéticas",s:"dry fit, academia"},
+  {id:"misto",n:"Algodão + sintético",s:"camisas, blusas mistas"},
+  {id:"delic",n:"Delicadas",s:"lingerie, seda, lã"},
+  {id:"bebe",n:"Roupa de bebê",s:""},
+  {id:"pet",n:"Com pelo de pet",s:"mantinhas, roupas"}
+];
+const LOADS = [
+  {id:"p",n:"Pouca",s:"até 2 kg · ex.: 2 lençóis",kg:2},
+  {id:"m",n:"Média",s:"até 5,5 kg · meio cesto",kg:5.5},
+  {id:"g",n:"Cheia",s:"até 11 kg · cesto cheio",kg:11}
+];
+const DIRTS = [{id:"leve",n:"Leve",s:"usou pouco"},{id:"normal",n:"Normal",s:""},{id:"pesada",n:"Pesada",s:"manchas, suor, barro"}];
+const DRYS = [{id:"sim",n:"Sim",s:""},{id:"nao",n:"Não, varal",s:""}];
+const TIMES = [{id:30,n:"30 min"},{id:60,n:"1 h"},{id:120,n:"2 h"},{id:180,n:"3 h"},{id:9999,n:"Sem pressa",s:"ou vou sair"}];
+
+function optionsFor(cat, dirt){
+  const heavy = dirt === "pesada";
+  switch(cat){
+    case "lencois": return heavy ? ["algodao","mix"] : ["algodao","mix","eco"];
+    case "toalhas": return ["algodao","mix","cama"];
+    case "edredom": return ["cama"];
+    case "jeans":   return heavy ? ["jeans"] : ["jeans","rapido60","rapido15"];
+    case "sint":
+      if (heavy) return ["sintetico"];
+      if (dirt === "leve") return ["diaadia","rapido60","sintetico","rapido15"];
+      return ["sintetico","diaadia","rapido60","rapido15"];
+    case "misto":   return heavy ? ["mix"] : (dirt === "leve" ? ["diaadia","mix","eco"] : ["mix","diaadia","eco"]);
+    case "delic":   return ["delicado"];
+    case "bebe":    return ["bebe","algodao"];
+    case "pet":     return ["pets"];
+    case "dia":
+      if (dirt === "leve") return ["diaadia","rapido60","rapido15","eco","mix"];
+      if (heavy) return ["algodao","mix"];
+      return ["diaadia","mix","eco","algodao"];
+  }
+  return ["mix"];
+}
+const NO_DRY = {edredom:"Edredons, mantas e colchas não devem ir à secagem. Seque no varal.",
+                delic:"Lã, seda e peças delicadas não vão à secagem. Seque à sombra, na horizontal."};
+function dryEst(kg){
+  if (kg <= 2)   return {m:70,  how:"CUSTOM 60 min (o visor mostra 70)"};
+  if (kg <= 5.5) return {m:130, how:"CUSTOM 120 min (o visor mostra 130) ou AUTO"};
+  return {m:273, how:"AUTO (a máquina calcula; conte com cerca de 4h30)"};
+}
+const fmt = m => Math.floor(m/60) + ":" + String(m%60).padStart(2,"0");
+const fmtLong = m => m >= 60 ? (Math.floor(m/60) + " h" + (m%60 ? " " + (m%60) + " min" : "")) : m + " min";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function plan(cat, load, dirt, wantDry, time){
+  const kg = load.kg;
+  const opts = optionsFor(cat, dirt).filter(k => P[k].w >= kg);
+  const canDry = wantDry && !NO_DRY[cat];
+  const dryKg = Math.min(kg, 7);
+  const build = k => {
+    const p = P[k]; let total = p.m; let dry = null;
+    if (canDry){
+      const est = dryEst(dryKg);
+      dry = (p.sec && p.d >= dryKg) ? {mode:"inline", how:"Aperte SECAR antes de iniciar: " + est.how} : {mode:"separate", how:"Depois, rode o programa Secar: " + est.how};
+      total += est.m;
+    }
+    return {k, p, total, dry};
+  };
+  if (!opts.length) return null;
+  const all = opts.map(build);
+  const fit = all.find(o => o.total <= time);
+  return {ideal:all[0], pick:fit || all[0], fits:!!fit, all};
+}
+
+/* ---------- Estado e formulário ---------- */
+const state = {mode:"roupa", cats:new Set(), load:"p", dirt:"normal", dry:"sim", time:180, prog:null};
+
+function chips(el, list, name, multi){
+  el.innerHTML = list.map(o => {
+    const id = name + "-" + o.id;
+    return `<div class="chip"><input type="${multi?"checkbox":"radio"}" name="${name}" id="${id}" value="${o.id}"><label for="${id}">${o.n}${o.s?`<span>${o.s}</span>`:""}</label></div>`;
+  }).join("");
+}
+chips(document.getElementById("cats"), CATS, "cat", true);
+chips(document.getElementById("loads"), LOADS, "load");
+chips(document.getElementById("dirts"), DIRTS, "dirt");
+chips(document.getElementById("drys"), DRYS, "dry");
+chips(document.getElementById("times"), TIMES, "time");
+chips(document.getElementById("progs"), SELECTOR.map(s => ({id:s.k, n:s.name || P[s.k].n, s:s.time || (s.k==="secar" ? "automático" : fmt(P[s.k].m))})), "prog");
+
+function syncForm(){
+  document.querySelectorAll('input[name=cat]').forEach(i => i.checked = state.cats.has(i.value));
+  document.querySelector(`input[name=load][value="${state.load}"]`).checked = true;
+  document.querySelector(`input[name=dirt][value="${state.dirt}"]`).checked = true;
+  document.querySelector(`input[name=dry][value="${state.dry}"]`).checked = true;
+  document.querySelector(`input[name=time][value="${state.time}"]`).checked = true;
+  document.querySelectorAll('input[name=prog]').forEach(i => i.checked = i.value === state.prog);
+  document.getElementById("m-roupa").setAttribute("aria-pressed", state.mode === "roupa");
+  document.getElementById("m-prog").setAttribute("aria-pressed", state.mode === "programa");
+  document.getElementById("by-roupa").hidden = state.mode !== "roupa";
+  document.getElementById("by-prog").hidden = state.mode !== "programa";
+}
+document.querySelector(".mode").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.mode = b.dataset.mode; render();
+});
+document.getElementById("f").addEventListener("change", e => {
+  const t = e.target;
+  if (t.name === "cat"){ t.checked ? state.cats.add(t.value) : state.cats.delete(t.value); }
+  else if (t.name === "time") state.time = Number(t.value);
+  else state[t.name] = t.value;
+  render();
+});
+
+/* ---------- Resultado: pelas roupas ---------- */
+function resultCard(r, cat, load){
+  const o = r.pick, p = o.p;
+  const steps = [`Gire o seletor até <b>${p.n}</b>.`];
+  if (o.k === "algodao" && (cat === "dia" || cat === "misto")) steps.push("Baixe para 40 °C na tecla TEMP, se a roupa for colorida.");
+  if (p.vapor && (state.dirt === "pesada" || cat === "toalhas" || cat === "lencois")) steps.push("Opcional: aperte VAPOR para higienizar melhor.");
+  if (o.dry && o.dry.mode === "inline") steps.push(o.dry.how + ".");
+  steps.push("Sabão no compartimento II (máx. 40 g); amaciante no do meio.");
+  steps.push("Aperte INICIAR/pausar.");
+  if (o.dry && o.dry.mode === "separate") steps.push(o.dry.how + ".");
+  const cName = CATS.find(c => c.id === cat).n;
+  return `<div class="r-head">
+      <div style="min-width:0">
+        <span class="box-label">Ciclo recomendado · ${cName.toLowerCase()}</span>
+        <div class="r-name">${p.n}</div>
+        <p class="r-why">${WHY[o.k] || ""}</p>
+      </div>
+      <div class="lcd">${fmt(o.total)}<small>${o.dry ? "lavar + secar · estimativa" : "tempo padrão"}</small></div>
+    </div>
+    <dl class="settings">
+      <div><dt>Temperatura</dt><dd>${p.t}</dd></div>
+      <div><dt>Centrifugação</dt><dd>${p.r} rpm</dd></div>
+      <div><dt>Lavagem</dt><dd>${fmt(p.m)}</dd></div>
+      <div><dt>Secagem</dt><dd>${o.dry ? (o.dry.mode === "inline" ? "tecla SECAR" : "prog. Secar") : "varal"}</dd></div>
+    </dl>
+    <div class="r-sec"><h3>Na máquina</h3><ol>${steps.map(s => `<li>${s}</li>`).join("")}</ol></div>`;
+}
+
+function renderRoupa(out){
+  const cats = [...state.cats];
+  const load = LOADS.find(l => l.id === state.load);
+  const wantDry = state.dry === "sim";
+  if (!cats.length){ out.innerHTML = `<span class="box-label">Ciclo recomendado</span><p class="r-empty">Marque o tipo de roupa ao lado. Aqui aparece o programa indicado, com temperatura, centrifugação, tempo total e os botões para apertar.</p>`; return; }
+
+  const notes = [];
+  const results = cats.map(c => ({c, r: plan(c, load, state.dirt, wantDry, state.time)}));
+  results.filter(x => !x.r).forEach(x => notes.push({cls:"bad", t:`${CATS.find(c=>c.id===x.c).n}: nenhum programa aceita essa quantidade. Divida em cargas menores.`}));
+  const valid = results.filter(x => x.r);
+  if (wantDry) cats.forEach(c => { if (NO_DRY[c]) notes.push({cls:"warn", t:NO_DRY[c]}); });
+  if (wantDry && load.kg > 7) notes.push({cls:"warn", t:"A secagem aceita no máximo 7 kg. Retire parte das roupas antes de secar."});
+
+  let html = "";
+  if (!valid.length){ out.innerHTML = `<span class="box-label">Ciclo recomendado</span><ul class="r-notes">${notes.map(n=>`<li class="${n.cls}">${n.t}</li>`).join("")}</ul>`; return; }
+
+  const programs = [...new Set(valid.map(x => x.r.pick.k))];
+  const mustSeparate = cats.filter(c => ["delic","edredom","pet","bebe"].includes(c));
+
+  if (programs.length === 1){
+    const x = valid[0];
+    html += resultCard(x.r, x.c, load);
+    if (!x.r.fits) notes.unshift({cls:"warn", t:`Nenhum programa adequado cabe em ${fmtLong(state.time)}. Use ADIAR FIM para a roupa terminar quando você voltar.`});
+    const others = x.r.all.filter(o => o.k !== x.r.pick.k);
+    if (others.length) html += `<div class="r-sec"><h3>Outras opções adequadas</h3><div class="r-alt">${others.map(o => `<div><span>${o.p.n}${o.total > state.time ? ' <small>· passa do seu tempo</small>' : ""}</span><span>${fmt(o.total)}</span></div>`).join("")}</div></div>`;
+    if (state.time === 9999) notes.push({cls:"", t:"Vai sair? Aperte ADIAR FIM (1 a 24 h) para a roupa terminar perto da hora em que você chega."});
+  } else {
+    html += `<span class="box-label">Ciclo recomendado</span><div class="r-name" style="font-size:24px">Separe em ${valid.length} cargas</div>` +
+      `<div style="display:grid;gap:8px">` + valid.map(x => {
+        const o = x.r.pick;
+        return `<div class="r-load"><div><b>${o.p.n}</b><br><small style="color:var(--res-muted)">${CATS.find(c=>c.id===x.c).n} · ${o.p.t} · ${o.p.r} rpm${o.dry ? " · " + (o.dry.mode==="inline"?"tecla SECAR":"depois, prog. Secar") : ""}</small></div><span>${fmt(o.total)}</span></div>`;
+      }).join("") + `</div>`;
+    if (!mustSeparate.length){
+      const together = plan("misto", load, state.dirt === "pesada" ? "normal" : state.dirt, wantDry, state.time);
+      if (together) html += `<div class="r-sec"><h3>Tudo junto</h3><p style="font-size:14px">Use <b>${together.pick.p.n}</b> (${fmtLong(together.pick.total)}), desde que as cores combinem.</p></div>`;
+    } else notes.push({cls:"", t:"Delicadas, edredons, roupa de bebê e peças com pelo de pet vão em carga separada."});
+  }
+  if (notes.length) html += `<ul class="r-notes">${notes.map(n=>`<li class="${n.cls}">${n.t}</li>`).join("")}</ul>`;
+  out.innerHTML = html;
+}
+
+/* ---------- Resultado: pelo programa ---------- */
+function renderProg(out){
+  if (!state.prog){ out.innerHTML = `<span class="box-label">Programa</span><p class="r-empty">Escolha um programa ao lado para ver para que ele serve, o que não deve ir nele e como configurar.</p>`; return; }
+  const s = SELECTOR.find(x => x.k === state.prog), p = P[s.k];
+  const name = s.name || p.n;
+  const timeTxt = s.time ? "15:00 / 0:59" : (s.k === "secar" ? "AUTO" : fmt(p.m));
+  const funcs = ["Adiar fim"]; if (p.sec) funcs.push("Secar"); if (p.vapor) funcs.push("Vapor");
+  const cap = s.k === "limpeza" ? "sem roupa" : (s.k === "secar" ? "—" : String(p.w).replace(".",",") + " kg");
+  const dry = p.d ? String(p.d).replace(".",",") + " kg" : "não seca";
+  out.innerHTML = `<div class="r-head">
+      <div style="min-width:0">
+        <span class="box-label">Programa</span>
+        <div class="r-name">${name}</div>
+        ${WHY[s.k] ? `<p class="r-why">${WHY[s.k]}</p>` : ""}
+      </div>
+      <div class="lcd" style="${s.time ? "font-size:30px" : ""}">${timeTxt}<small>${s.k === "secar" ? "ajusta à carga · padrão 4:33" : "tempo padrão"}</small></div>
+    </div>
+    <dl class="settings">
+      <div><dt>Lava até</dt><dd>${cap}</dd></div>
+      <div><dt>Seca até</dt><dd>${dry}</dd></div>
+      <div><dt>Temperatura</dt><dd>${p.t}</dd></div>
+      <div><dt>Centrifugação</dt><dd>${s.k === "rapido60" ? "800 / 1200" : p.r}${p.r === "—" ? "" : " rpm"}</dd></div>
+    </dl>
+    <div class="r-sec"><h3>Indicado para</h3><ul class="tags">${s.good.map(g => `<li>${g}</li>`).join("")}</ul></div>
+    ${s.bad.length ? `<div class="r-sec"><h3>Evite</h3><ul class="tags no">${s.bad.map(g => `<li>${g}</li>`).join("")}</ul></div>` : ""}
+    <div class="r-sec"><h3>Funções extras</h3><p style="font-size:14px">${funcs.join(" · ")}</p>${s.note ? `<p style="font-size:14px;color:var(--res-muted)">${s.note}</p>` : ""}</div>`;
+}
+
+function render(){
+  syncForm();
+  const out = document.getElementById("out");
+  state.mode === "roupa" ? renderRoupa(out) : renderProg(out);
+}
+
+/* ---------- Abas ---------- */
+const TABS = ["ciclo","manutencao","suporte"];
+function showTab(id){
+  if (!TABS.includes(id)) id = "ciclo";
+  TABS.forEach(t => {
+    document.getElementById("t-" + t).setAttribute("aria-selected", t === id);
+    document.getElementById("t-" + t).tabIndex = t === id ? 0 : -1;
+    document.getElementById("p-" + t).hidden = t !== id;
+  });
+  try { localStorage.setItem("lavanderia-tab", id); } catch(e){}
+}
+document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) showTab(b.dataset.tab); });
+document.querySelector(".tabs").addEventListener("keydown", e => {
+  if (!["ArrowRight","ArrowLeft"].includes(e.key)) return;
+  const cur = TABS.findIndex(t => document.getElementById("t-" + t).getAttribute("aria-selected") === "true");
+  const nx = TABS[(cur + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+  showTab(nx); document.getElementById("t-" + nx).focus();
+});
+let startTab = (location.hash || "").slice(1);
+if (!TABS.includes(startTab)) { try { startTab = localStorage.getItem("lavanderia-tab") || "ciclo"; } catch(e){ startTab = "ciclo"; } }
+showTab(startTab);
+
+/* ---------- Manutenção ---------- */
+const TASKS = [
+  {id:"cesto", n:"Limpeza do cesto", iv:60, how:"Máquina vazia, programa Limpeza do cesto, com até 30 ml de água sanitária no dispenser. Cerca de 1h30 a 60 °C.", basis:"Manual: a cada ~100 lavagens, e com mais frequência se usar muito a secagem.", count:true},
+  {id:"vedacao", n:"Borracha da porta", iv:30, how:"Pano macio em toda a vedação, desobstruindo os canais de escoamento. É ali que ficam os fiapos.", basis:"Manual: verificar e limpar periodicamente; vedação suja causa mau cheiro."},
+  {id:"bomba", n:"Filtro da bomba de drenagem", iv:30, how:"Tire da tomada. Abra a tampinha frontal inferior, escoe a água num pote pela mangueirinha, gire o filtro para fora e lave.", basis:"Manual: verificar regularmente. Entupido, gera erro E21."},
+  {id:"dispenser", n:"Gaveta de sabão", iv:30, how:"Puxe a gaveta, solte a tampa do amaciante e lave com água corrente e escovinha. Limpe também o encaixe.", basis:"Manual: limpeza periódica para evitar entupimento."},
+  {id:"agua", n:"Filtros de entrada de água", iv:90, how:"Feche a torneira, solte a mangueira na torneira e na máquina e lave os dois filtros em água corrente.", basis:"Manual: verificar com frequência. Entupidos, causam erro E10."}
+];
+const BASE = "2026-10-17";
+const DEFAULTS = {cesto:{last:"2026-10-17", iv:60, n:0}};
+const KEY = "lavanderia-leo-v1";
+let store = {};
+try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e){ store = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} };
+const get = t => Object.assign({last:BASE, iv:t.iv, n:0}, DEFAULTS[t.id] || {}, store[t.id] || {});
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d; };
+const brDate = d => d.toLocaleDateString("pt-BR", {day:"2-digit", month:"short", year:"numeric"});
+
+function renderMaint(){
+  const now = new Date(today() + "T12:00:00");
+  document.getElementById("maint").innerHTML = TASKS.map(t => {
+    const s = get(t);
+    const due = addDays(s.last, s.iv);
+    const left = Math.round((due - now) / 86400000);
+    const pill = left < 0 ? `<span class="pill bad">Atrasada ${-left} d</span>` : left <= 7 ? `<span class="pill warn">${left === 0 ? "Vence hoje" : "Em " + left + " d"}</span>` : `<span class="pill ok">Em dia</span>`;
+    const counter = t.count ? `<div style="display:grid;gap:6px"><div class="counter"><span>Lavagens desde a última: <b>${s.n}</b> / 100</span><button type="button" class="btn ghost" data-inc="${t.id}">+1 lavagem</button></div><div class="bar"><i style="width:${Math.min(100, s.n)}%"></i></div></div>` : "";
+    return `<article class="card">
+      <div class="th"><h3>${t.n}</h3>${pill}</div>
+      <div class="next">${brDate(due)}<small>próxima · última em ${brDate(new Date(s.last + "T12:00:00"))}${!store[t.id] && !DEFAULTS[t.id] ? " (instalação)" : ""}</small></div>
+      <p>${t.how}</p>
+      ${counter}
+      <p class="basis">${t.basis}</p>
+      <div class="ctrl">
+        <button type="button" class="btn" data-done="${t.id}">Feito hoje</button>
+        <label for="last-${t.id}">Última vez<input type="date" id="last-${t.id}" data-last="${t.id}" value="${s.last}"></label>
+        <label for="iv-${t.id}">A cada (dias)<input type="number" min="1" max="365" id="iv-${t.id}" data-iv="${t.id}" value="${s.iv}"></label>
+      </div>
+    </article>`;
+  }).join("");
+}
+document.getElementById("maint").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.done){ const id = b.dataset.done; store[id] = Object.assign(get(TASKS.find(t=>t.id===id)), {last: today()}); if (id === "cesto") store[id].n = 0; }
+  if (b.dataset.inc){ const id = b.dataset.inc; const s = get(TASKS.find(t=>t.id===id)); store[id] = Object.assign({}, s, {n: s.n + 1}); }
+  save(); renderMaint();
+});
+document.getElementById("maint").addEventListener("change", e => {
+  const i = e.target;
+  if (i.dataset.last && i.value){ const id = i.dataset.last; store[id] = Object.assign(get(TASKS.find(t=>t.id===id)), {last: i.value}); }
+  if (i.dataset.iv){ const id = i.dataset.iv; const v = Math.max(1, Math.min(365, parseInt(i.value,10) || 30)); store[id] = Object.assign(get(TASKS.find(t=>t.id===id)), {iv: v}); }
+  save(); renderMaint();
+});
+
+/* ---------- Suporte: copiar e notas ---------- */
+document.getElementById("p-suporte").addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const el = document.getElementById(b.dataset.copy);
+  const done = () => { b.textContent = "Copiado"; setTimeout(() => b.textContent = "Copiar", 1500); };
+  try {
+    navigator.clipboard.writeText(el.textContent.replace(/\s/g,"")).then(done, () => selectText(el));
+  } catch(err){ selectText(el); }
+});
+function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+const NKEY = "lavanderia-leo-notas";
+let notes = [];
+try { notes = JSON.parse(localStorage.getItem(NKEY) || "[]") || []; } catch(e){ notes = []; }
+const saveNotes = () => { try { localStorage.setItem(NKEY, JSON.stringify(notes)); } catch(e){} };
+let pendingDelete = null;
+document.getElementById("n-date").value = today();
+function renderNotes(){
+  const el = document.getElementById("notes");
+  if (!notes.length){ el.innerHTML = `<li class="empty-note">Nenhuma nota ainda. A primeira aparece aqui, com a data.</li>`; return; }
+  const sorted = [...notes].sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+  el.innerHTML = sorted.map(n => `<li class="note">
+    <div class="nh"><time datetime="${n.date}">${brDate(new Date(n.date + "T12:00:00"))}</time>
+      <div class="acts">${pendingDelete === n.id
+        ? `<span style="font-size:13px;color:var(--muted)">Excluir esta nota?</span><button type="button" class="btn danger" data-del="${n.id}">Excluir</button><button type="button" class="btn ghost" data-cancel="1">Cancelar</button>`
+        : `<button type="button" class="btn ghost" data-ask="${n.id}">Excluir</button>`}</div></div>
+    <p>${esc(n.text)}</p></li>`).join("");
+}
+document.getElementById("nf").addEventListener("submit", e => {
+  e.preventDefault();
+  const ta = document.getElementById("n-text");
+  const text = ta.value.trim(); if (!text) { ta.focus(); return; }
+  notes.push({id: Date.now(), date: document.getElementById("n-date").value || today(), text});
+  saveNotes(); ta.value = ""; document.getElementById("n-date").value = today(); renderNotes();
+});
+document.getElementById("notes").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.ask) pendingDelete = Number(b.dataset.ask);
+  else if (b.dataset.cancel) pendingDelete = null;
+  else if (b.dataset.del){ notes = notes.filter(n => n.id !== Number(b.dataset.del)); pendingDelete = null; saveNotes(); }
+  renderNotes();
+});
+
+render();
+renderMaint();
+renderNotes();
+</script>
+
+</body>
+</html>
